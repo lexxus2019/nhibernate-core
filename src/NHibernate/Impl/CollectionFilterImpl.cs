@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System;
 using NHibernate.Util;
+using System.Data;
 
 namespace NHibernate.Impl
 {
@@ -85,6 +86,11 @@ namespace NHibernate.Impl
 		public override void List(IList results)
 		{
 			ArrayHelper.AddAll(results, List());
+		}
+
+		public override DataTable GetDataTable()
+		{
+			return base.GetDataTable();
 		}
 
 		public override IType[] TypeArray()

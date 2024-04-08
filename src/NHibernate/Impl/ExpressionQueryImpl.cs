@@ -1,13 +1,18 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 using NHibernate.Engine;
 using NHibernate.Engine.Query;
 using NHibernate.Hql.Ast.ANTLR;
 using NHibernate.Hql.Ast.ANTLR.Tree;
 using NHibernate.Hql.Ast.ANTLR.Util;
+using NHibernate.Loader;
+using NHibernate.Mapping;
 using NHibernate.Type;
 using NHibernate.Util;
 
@@ -137,6 +142,38 @@ namespace NHibernate.Impl
 				var result = Session.ListFilter(collection, ExpandParameters(namedParams), GetQueryParameters(namedParams));
 
 				return result as IList<T> ?? result.Cast<T>().ToList();
+			}
+			finally
+			{
+				After();
+			}
+		}
+
+		public override DataTable GetDataTable()
+		{
+			VerifyParameters();
+			var namedParams = NamedParams;
+			Before();
+			try
+			{
+				var list = Session.ListFilter(collection, ExpandParameters(namedParams), GetQueryParameters(namedParams));
+
+				var dataTable = new DataTable();
+
+				var dataTypes = ReturnTypes;
+				var alias = ReturnAliases;
+
+				for (var i = 0; i < alias.Length; i++)
+				{
+					dataTable.Columns.Add(alias[i], dataTypes[i].ReturnedClass);
+				}
+
+				foreach (object[] row in list)
+				{
+					dataTable.LoadDataRow(row, true);
+				}
+
+				return dataTable;
 			}
 			finally
 			{

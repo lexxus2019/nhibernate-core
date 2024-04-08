@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Data;
 using System.Data.Common;
 using System.Linq.Expressions;
 using System.Runtime.Serialization;
@@ -14,6 +15,7 @@ using NHibernate.Engine.Query.Sql;
 using NHibernate.Event;
 using NHibernate.Hql;
 using NHibernate.Intercept;
+using NHibernate.Loader;
 using NHibernate.Loader.Criteria;
 using NHibernate.Loader.Custom;
 using NHibernate.MultiTenancy;
@@ -551,6 +553,71 @@ namespace NHibernate.Impl
 					try
 					{
 						plan.PerformList(queryParameters, this, results);
+						success = true;
+					}
+					catch (HibernateException)
+					{
+						// Do not call Convert on HibernateExceptions
+						throw;
+					}
+					catch (Exception e)
+					{
+						throw Convert(e, "Could not execute query");
+					}
+					finally
+					{
+						AfterOperation(success);
+					}
+				}
+			}
+		}
+
+		public override void GetDataTable(IQueryExpression queryExpression, QueryParameters queryParameters, DataTable results)
+		{
+			GetDataTable(queryExpression, queryParameters, results, null);
+		}
+
+		private void GetDataTable(IQueryExpression queryExpression, QueryParameters queryParameters, DataTable results, object filterConnection)
+		{
+			using (BeginProcess())
+			{
+				queryParameters.ValidateParameters();
+
+				var isFilter = filterConnection != null;
+				var plan = isFilter
+					? GetFilterQueryPlan(filterConnection, queryExpression, queryParameters, false)
+					: GetHQLQueryPlan(queryExpression, false);
+
+				// GetFilterQueryPlan has already auto flushed or fully flush.
+				if (!isFilter)
+					AutoFlushIfRequired(plan.QuerySpaces);
+
+				bool success = false;
+				using (SuspendAutoFlush()) //stops flush being called multiple times if this method is recursively called
+				{
+					try
+					{
+						var list = new List<object>();
+						plan.PerformList(queryParameters, this, list);
+						var metadata = plan.ReturnMetadata;
+
+						var dataTypes = metadata.ReturnTypes;
+						var alias = metadata.ReturnAliases;
+
+						for (var i = 0; i < alias.Length; i++)
+						{
+							results.Columns.Add(alias[i], dataTypes[i].ReturnedClass);
+						}
+
+						results.BeginLoadData();
+
+						foreach (object[] row in list)
+						{
+							results.LoadDataRow(row, true);
+						}
+
+						results.EndLoadData();
+
 						success = true;
 					}
 					catch (HibernateException)
@@ -1728,6 +1795,47 @@ namespace NHibernate.Impl
 					catch (Exception sqle)
 					{
 						throw Convert(sqle, "Unable to perform find");
+					}
+					finally
+					{
+						AfterOperation(success);
+					}
+				}
+			}
+		}
+
+		public override void DataTableCustomQuery(ICustomQuery customQuery, QueryParameters queryParameters, DataTable results)
+		{
+			using (BeginProcess())
+			{
+				CustomLoader loader = new CustomLoader(customQuery, Factory);
+				AutoFlushIfRequired(loader.QuerySpaces);
+
+				bool success = false;
+				using (SuspendAutoFlush())
+				{
+					try
+					{
+						var list = loader.List(this, queryParameters);
+
+						var dataTypes = loader.ResultTypes;
+						var alias = loader.ReturnAliases;
+
+						for (var i = 0; i < alias.Length; i++)
+						{
+							results.Columns.Add(alias[i], dataTypes[i].ReturnedClass);
+						}
+
+						results.BeginLoadData();
+
+						foreach (object[] row in list)
+						{
+							results.LoadDataRow(row, true);
+						}
+
+						results.EndLoadData();
+
+						success = true;
 					}
 					finally
 					{

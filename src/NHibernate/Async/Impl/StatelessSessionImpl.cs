@@ -32,6 +32,8 @@ namespace NHibernate.Impl
 {
 	using System.Threading.Tasks;
 	using System.Threading;
+	using System.Data;
+
 	public partial class StatelessSessionImpl : AbstractSessionImpl, IStatelessSession
 	{
 
@@ -667,6 +669,11 @@ namespace NHibernate.Impl
 				temporaryPersistenceContext.Clear();
 				return result;
 			}
+		}
+
+		public override Task DataTableCustomQueryAsync(ICustomQuery customQuery, QueryParameters queryParameters, DataTable results, CancellationToken cancellationToken)
+		{
+			throw new NotImplementedException();
 		}
 	}
 }

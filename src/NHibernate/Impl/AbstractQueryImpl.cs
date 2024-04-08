@@ -13,6 +13,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Data;
 
 namespace NHibernate.Impl
 {
@@ -945,6 +946,7 @@ namespace NHibernate.Impl
 		public abstract IEnumerable Enumerable();
 		public abstract IEnumerable<T> Enumerable<T>();
 		public abstract IList List();
+		public abstract DataTable GetDataTable();
 		public abstract void List(IList results);
 		public abstract IList<T> List<T>();
 		public T UniqueResult<T>()

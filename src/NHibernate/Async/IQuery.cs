@@ -19,6 +19,7 @@ namespace NHibernate
 {
 	using System.Threading.Tasks;
 	using System.Threading;
+	using System.Data;
 
 	public partial interface IQuery
 	{
@@ -96,5 +97,7 @@ namespace NHibernate
 		/// <param name="cancellationToken">A cancellation token that can be used to cancel the work</param>
 		/// <returns> The number of entities updated or deleted. </returns>
 		Task<int> ExecuteUpdateAsync(CancellationToken cancellationToken = default(CancellationToken));
+
+		Task<DataTable> GetDataTable(CancellationToken cancellationToken = default(CancellationToken));
 	}
 }

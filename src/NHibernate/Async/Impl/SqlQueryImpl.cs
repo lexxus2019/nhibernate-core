@@ -22,6 +22,8 @@ namespace NHibernate.Impl
 {
 	using System.Threading.Tasks;
 	using System.Threading;
+	using System.Data;
+
 	public partial class SqlQueryImpl : AbstractQueryImpl, ISQLQuery, ISynchronizableSQLQuery
 	{
 
@@ -125,6 +127,11 @@ namespace NHibernate.Impl
 			{
 				return Task.FromException<IEnumerable<ITranslator>>(ex);
 			}
+		}
+
+		public override Task<DataTable> GetDataTable(CancellationToken cancellationToken = default)
+		{
+			throw new NotImplementedException();
 		}
 	}
 }

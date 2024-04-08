@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using NHibernate.Engine;
 using NHibernate.Engine.Query;
@@ -165,6 +166,24 @@ namespace NHibernate.Impl
 			try
 			{
 				return Session.List<T>(spec, qp);
+			}
+			finally
+			{
+				After();
+			}
+		}
+
+		public override DataTable GetDataTable()
+		{
+			VerifyParameters();
+			IDictionary<string, TypedValue> namedParams = NamedParams;
+			NativeSQLQuerySpecification spec = GenerateQuerySpecification(namedParams);
+			QueryParameters qp = GetQueryParameters(namedParams);
+
+			Before();
+			try
+			{
+				return Session.GetDataTable(spec, qp);
 			}
 			finally
 			{

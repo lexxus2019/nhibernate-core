@@ -30,6 +30,8 @@ namespace NHibernate.Engine
 {
 	using System.Threading.Tasks;
 	using System.Threading;
+	using System.Data;
+
 	public static partial class SessionImplementorExtensions
 	{
 
@@ -168,6 +170,8 @@ namespace NHibernate.Engine
 		Task<IList> ListAsync(NativeSQLQuerySpecification spec, QueryParameters queryParameters, CancellationToken cancellationToken);
 
 		Task ListAsync(NativeSQLQuerySpecification spec, QueryParameters queryParameters, IList results, CancellationToken cancellationToken);
+
+		Task GetDataTable(NativeSQLQuerySpecification spec, QueryParameters queryParameters, DataTable results, CancellationToken cancellationToken);
 
 		/// <summary>
 		/// Strongly-typed version of <see cref="List(NativeSQLQuerySpecification, QueryParameters)" />

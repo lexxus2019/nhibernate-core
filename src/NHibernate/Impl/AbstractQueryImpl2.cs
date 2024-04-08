@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using NHibernate.Engine;
 using NHibernate.Engine.Query;
@@ -79,6 +80,21 @@ namespace NHibernate.Impl
 			try
 			{
 				return Session.List(ExpandParameters(namedParams), GetQueryParameters(namedParams));
+			}
+			finally
+			{
+				After();
+			}
+		}
+
+		public override DataTable GetDataTable()
+		{
+			VerifyParameters();
+			var namedParams = NamedParams;
+			Before();
+			try
+			{
+				return Session.GetDataTable(ExpandParameters(namedParams), GetQueryParameters(namedParams));
 			}
 			finally
 			{

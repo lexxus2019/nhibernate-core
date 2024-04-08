@@ -23,6 +23,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Data;
 
 namespace NHibernate.Impl
 {
@@ -36,6 +37,9 @@ namespace NHibernate.Impl
 		public abstract Task<IEnumerable<T>> EnumerableAsync<T>(CancellationToken cancellationToken = default(CancellationToken));
 		public abstract Task<IList> ListAsync(CancellationToken cancellationToken = default(CancellationToken));
 		public abstract Task ListAsync(IList results, CancellationToken cancellationToken = default(CancellationToken));
+
+		public abstract Task<DataTable> GetDataTable(CancellationToken cancellationToken = default(CancellationToken));
+
 		public abstract Task<IList<T>> ListAsync<T>(CancellationToken cancellationToken = default(CancellationToken));
 		public async Task<T> UniqueResultAsync<T>(CancellationToken cancellationToken = default(CancellationToken))
 		{

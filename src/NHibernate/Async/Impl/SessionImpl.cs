@@ -38,6 +38,8 @@ namespace NHibernate.Impl
 {
 	using System.Threading.Tasks;
 	using System.Threading;
+	using System.Data;
+
 	public sealed partial class SessionImpl : AbstractSessionImpl, IEventSource, ISerializable, IDeserializationCallback
 	{
 
@@ -1547,6 +1549,11 @@ namespace NHibernate.Impl
 				}
 				return result;
 			}
+		}
+
+		public override Task DataTableCustomQueryAsync(ICustomQuery customQuery, QueryParameters queryParameters, DataTable results, CancellationToken cancellationToken)
+		{
+			throw new NotImplementedException();
 		}
 	}
 }

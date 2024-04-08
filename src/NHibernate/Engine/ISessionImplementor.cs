@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Data;
 using System.Data.Common;
 using NHibernate.AdoNet;
 using NHibernate.Cache;
@@ -204,6 +205,8 @@ namespace NHibernate.Engine
 
 		IList List(CriteriaImpl criteria);
 
+		DataTable GetDataTable(IQueryExpression queryExpression, QueryParameters parameters);
+
 		/// <summary>
 		/// Execute an <c>Iterate()</c> query
 		/// </summary>
@@ -287,6 +290,10 @@ namespace NHibernate.Engine
 		IList List(NativeSQLQuerySpecification spec, QueryParameters queryParameters);
 
 		void List(NativeSQLQuerySpecification spec, QueryParameters queryParameters, IList results);
+
+		DataTable GetDataTable(NativeSQLQuerySpecification spec, QueryParameters queryParameters);
+
+		void GetDataTable(NativeSQLQuerySpecification spec, QueryParameters queryParameters, DataTable results);
 
 		/// <summary>
 		/// Strongly-typed version of <see cref="List(NativeSQLQuerySpecification, QueryParameters)" />

@@ -162,6 +162,18 @@ namespace NHibernate.Impl
 		}
 		public abstract void CloseSessionFromSystemTransaction();
 
+		public virtual DataTable GetDataTable(IQueryExpression queryExpression, QueryParameters parameters)
+		{
+			var results = (DataTable) typeof(DataTable)
+				.MakeGenericType(queryExpression.Type)
+				.GetConstructor(System.Type.EmptyTypes)
+				.Invoke(null);
+			GetDataTable(queryExpression, parameters, results);
+			return results;
+		}
+
+		public abstract void GetDataTable(IQueryExpression queryExpression, QueryParameters queryParameters, DataTable results);
+
 		public virtual IList List(IQueryExpression queryExpression, QueryParameters parameters)
 		{
 			var results = (IList)typeof(List<>)
@@ -272,6 +284,31 @@ namespace NHibernate.Impl
 				return results;
 			}
 		}
+
+		public virtual DataTable GetDataTable(NativeSQLQuerySpecification spec, QueryParameters queryParameters)
+		{
+			using (BeginProcess())
+			{
+				var results = new DataTable();
+				GetDataTable(spec, queryParameters, results);
+				return results;
+			}
+		}
+
+		public virtual void GetDataTable(NativeSQLQuerySpecification spec, QueryParameters queryParameters, DataTable results)
+		{
+			using (BeginProcess())
+			{
+				var query = new SQLCustomQuery(
+					spec.SqlQueryReturns,
+					spec.QueryString,
+					spec.QuerySpaces,
+					Factory);
+				DataTableCustomQuery(query, queryParameters, results);
+			}
+		}
+
+		public abstract void DataTableCustomQuery(ICustomQuery customQuery, QueryParameters queryParameters, DataTable results);		
 
 		public abstract void ListCustomQuery(ICustomQuery customQuery, QueryParameters queryParameters, IList results);
 

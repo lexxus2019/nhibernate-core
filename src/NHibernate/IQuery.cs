@@ -4,6 +4,7 @@ using NHibernate.Transform;
 using NHibernate.Type;
 using System.Collections.Generic;
 using NHibernate.Impl;
+using System.Data;
 
 namespace NHibernate
 {
@@ -147,6 +148,8 @@ namespace NHibernate
 		/// <typeparam name="T"></typeparam>
 		/// <returns></returns>
 		IEnumerable<T> Enumerable<T>();
+		
+		DataTable GetDataTable();
 
 		/// <summary>
 		/// Return the query results as an <see cref="IList"/>. If the query contains multiple results per row,

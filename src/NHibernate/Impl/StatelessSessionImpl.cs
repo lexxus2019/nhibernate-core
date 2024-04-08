@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq.Expressions;
 using NHibernate.Cache;
 using NHibernate.Collection;
@@ -121,6 +122,61 @@ namespace NHibernate.Impl
 				try
 				{
 					plan.PerformList(queryParameters, this, results);
+					success = true;
+				}
+				catch (HibernateException)
+				{
+					// Do not call Convert on HibernateExceptions
+					throw;
+				}
+				catch (Exception e)
+				{
+					throw Convert(e, "Could not execute query");
+				}
+				finally
+				{
+					AfterOperation(success);
+				}
+				temporaryPersistenceContext.Clear();
+			}
+		}
+
+		public override void GetDataTable(IQueryExpression queryExpression, QueryParameters queryParameters, DataTable results)
+		{
+			using (BeginProcess())
+			{
+				// We need to flush the batcher. Otherwise it may have pending operations which will not already have reached the database,
+				// and the query may yield stale data.
+				Flush();
+
+				queryParameters.ValidateParameters();
+				var plan = GetHQLQueryPlan(queryExpression, false);
+
+				bool success = false;
+				try
+				{
+					var list = new List<object>();
+					plan.PerformList(queryParameters, this, list);
+
+					var metadata = plan.ReturnMetadata;
+
+					var dataTypes = metadata.ReturnTypes;
+					var alias = metadata.ReturnAliases;
+
+					for (var i = 0; i < alias.Length; i++)
+					{
+						results.Columns.Add(alias[i], dataTypes[i].ReturnedClass);
+					}
+
+					results.BeginLoadData();
+
+					foreach (object[] row in list)
+					{
+						results.LoadDataRow(row, true);
+					}
+
+					results.EndLoadData();
+
 					success = true;
 				}
 				catch (HibernateException)
@@ -294,6 +350,44 @@ namespace NHibernate.Impl
 				temporaryPersistenceContext.Clear();
 			}
 		}
+		
+		public override void DataTableCustomQuery(ICustomQuery customQuery, QueryParameters queryParameters, DataTable results)
+		{
+			using (BeginProcess())
+			{
+				var loader = new CustomLoader(customQuery, Factory);
+
+				var success = false;
+				try
+				{
+					var list = loader.List(this, queryParameters);
+
+					var dataTypes = loader.ResultTypes;
+					var alias = loader.ReturnAliases;
+
+					for (var i = 0; i < alias.Length; i++)
+					{
+						results.Columns.Add(alias[i], dataTypes[i].ReturnedClass);
+					}
+
+					results.BeginLoadData();
+
+					foreach (object[] row in list)
+					{
+						results.LoadDataRow(row, true);
+					}
+
+					results.EndLoadData();
+					
+					success = true;
+				}
+				finally
+				{
+					AfterOperation(success);
+				}
+				temporaryPersistenceContext.Clear();							
+			}
+		}		
 
 		public override object GetFilterParameterValue(string filterParameterName)
 		{

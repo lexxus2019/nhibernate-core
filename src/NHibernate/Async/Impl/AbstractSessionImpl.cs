@@ -140,6 +140,20 @@ namespace NHibernate.Impl
 			}
 		}
 
+		public virtual async Task GetDataTable(NativeSQLQuerySpecification spec, QueryParameters queryParameters, DataTable results, CancellationToken cancellationToken)
+		{
+			cancellationToken.ThrowIfCancellationRequested();
+			using (BeginProcess())
+			{
+				var query = new SQLCustomQuery(
+					spec.SqlQueryReturns,
+					spec.QueryString,
+					spec.QuerySpaces,
+					Factory);
+				await(DataTableCustomQueryAsync(query, queryParameters, results, cancellationToken)).ConfigureAwait(false);
+			}
+		}
+
 		public virtual async Task<IList<T>> ListAsync<T>(NativeSQLQuerySpecification spec, QueryParameters queryParameters, CancellationToken cancellationToken)
 		{
 			cancellationToken.ThrowIfCancellationRequested();
@@ -152,6 +166,8 @@ namespace NHibernate.Impl
 		}
 
 		public abstract Task ListCustomQueryAsync(ICustomQuery customQuery, QueryParameters queryParameters, IList results, CancellationToken cancellationToken);
+
+		public abstract Task DataTableCustomQueryAsync(ICustomQuery customQuery, QueryParameters queryParameters, DataTable results, CancellationToken cancellationToken);
 
 		public virtual async Task<IList<T>> ListCustomQueryAsync<T>(ICustomQuery customQuery, QueryParameters queryParameters, CancellationToken cancellationToken)
 		{
